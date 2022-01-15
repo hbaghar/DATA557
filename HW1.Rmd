@@ -1,0 +1,13 @@
+---
+title: 'DATA 557: Homework Assignment 1'
+author: "Hriday Baghar"
+date: "January 14, 2022"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+
+<!-- Option+Cmd+R - Run all chunks  -->
+<!-- Cmd+Shift+Enter - Run current chunk -->
+<!-- Cmd+Option+I - Insert chunk -->
+
