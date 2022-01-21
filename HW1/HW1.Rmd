@@ -3,9 +3,9 @@ title: 'DATA 557: Homework Assignment 1'
 author: "Hriday Baghar"
 date: "January 20, 2022"
 output:
+  html_notebook: default
   pdf_document:
     latex_engine: xelatex
-  html_notebook: default
 mainfont: Helvetica
 monofont: Monaco
 ---
