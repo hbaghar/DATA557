@@ -3,8 +3,11 @@ title: 'DATA 557: Homework Assignment 1'
 author: "Hriday Baghar"
 date: "January 20, 2022"
 output:
-  pdf_document: default
+  pdf_document:
+    latex_engine: xelatex
   html_notebook: default
+mainfont: Helvetica
+monofont: Monaco
 ---
 
 ## Question 1
@@ -161,7 +164,10 @@ summary(iq.csv)
 ```{r}
 library(ggplot2)
 
-iq.hist <- ggplot(data = iq.csv, aes(IQ)) + geom_histogram(binwidth = 10, color = "lightgray") + ggtitle("Histogram plot of IQ") + geom_vline(xintercept = mean(iq.csv$IQ), color = "blue", linetype = 2)
+iq.hist <- ggplot(data = iq.csv, aes(IQ)) + 
+  geom_histogram(binwidth = 10, color = "lightgray") + 
+  ggtitle("Histogram plot of IQ") + 
+  geom_vline(xintercept = mean(iq.csv$IQ), color = "blue", linetype = 2)
 iq.hist
 ```
 The distribution is approximately normal. The blue line marks the mean.
