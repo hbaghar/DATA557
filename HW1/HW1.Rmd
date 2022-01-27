@@ -3,9 +3,9 @@ title: 'DATA 557: Homework Assignment 1'
 author: "Hriday Baghar"
 date: "January 20, 2022"
 output:
-  html_notebook: default
   pdf_document:
     latex_engine: xelatex
+  html_notebook: default
 mainfont: Helvetica
 monofont: Monaco
 ---
@@ -143,8 +143,8 @@ The p-values are similar.
 #### 2.5. Calculate the power of the test to detect the alternative hypothesis that the proportion of drivers wearing their seatbelt after the intervention is equal to 0.8.
 We must define the rejection region under the Null Hypothesis $p = 0.7$. We find that by applying qbinom(). We then consider the rate at which the Null Hypothesis would be rejected given that p is equivalent to an alternate value (0.8 in this case)
 ```{r}
-region <- qbinom(0.025, p = 0.7, size = 400)
-l <- 0.7*400 - region; u <- 0.7*400 + region
+l <- qbinom(p = 0.025, prob = 0.7, size = 400)
+u <- qbinom(p = 0.975, prob = 0.7, size = 400)
 cat("Lower limit = ",l,"\nUpper Limit = ",u)
 
 power <- sum(dbinom(c(0:l,u:400), size = 400, p=0.8))
