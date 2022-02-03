@@ -1,0 +1,63 @@
+---
+title: 'In-Class Activity 2: ANOVA'
+author: "Hriday Baghar"
+date: "2/2/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This exercise concerns the Morely series of experiments on the speed of light. The data are in a built-in R 
+data set: ‘morley’. The data are from 5 distinct experiments. The data from the first experiment was used in 
+Lecture 3 to test the null hypothesis that the mean for the first experiment is equal to 792. The goal of this 
+exercise is to use all 5 experiments to assess whether the experiments were unbiased overall, i.e., whether 
+the overall mean is equal to 792 and to assess whether there were differences between experiments.
+
+```{r}
+data <- morley
+str(data)
+summary(data)
+```
+
+### 1. An incorrect approach is to treat the data from all 5 experiments as one sample and apply the 1-sample t-test. Why is this wrong?
+The experiement results are not independent samples from the same distribution
+
+### 2. Given that the approach in Q1 is wrong, we might try testing the null hypothesis for each experiment separately. What test would be appropriate?
+One sample t-test would be suitable.
+
+### 3. What are the results?
+```{r}
+expts <- lapply(unique(data$Expt), function(x) {data[data$Expt == x,]})
+sapply(expts, function(x) {my.t.test(x$Speed, 792)})
+```
+
+### 4. This involves performing 5 tests so we need to be concerned about type I error inflation. How does this affect our conclusion from these test results? 
+p-value needs to be less than 0.05/5 = 0.01. This leads not being able to reject H0 for expt 4
+
+### 5. Now suppose that we want to test the null hypothesis that the means for all experiments are equal. First create some descriptive statistics for this question.
+```{r}
+library(dplyr)
+
+data %>% group_by(Expt) %>% summarize(Mean = mean(Speed), Variance = var(Speed))
+```
+
+
+### 6. What test would be appropriate to test the null hypothesis of equal means?
+ANOVA?
+
+### 7. Do the assumptions for this test appear to be met?
+Check
+
+### 8. Should you reject the null hypothesis with a significance level of 0.05?
+
+### 9. What is the p-value for the test?
+
+### 10. Now suppose that we wanted to determine which experiments have different means than others. One way to do this is to compare all possible pairs of means. What test would be used?
+
+### 11. Perform this analysis.
+
+### 12. What are the conclusions?
+
+### 13. How do multiple testing issues affect the conclusions that can be drawn from this analysis?
