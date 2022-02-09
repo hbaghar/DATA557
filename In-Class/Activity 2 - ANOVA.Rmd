@@ -42,18 +42,19 @@ library(dplyr)
 
 data %>% group_by(Expt) %>% summarize(Mean = mean(Speed), Variance = var(Speed))
 ```
-
-
 ### 6. What test would be appropriate to test the null hypothesis of equal means?
-ANOVA?
+ANOVA
 
 ### 7. Do the assumptions for this test appear to be met?
-Check
+From part 5 we see that variance is considerably different across the experiment groups
 
 ### 8. Should you reject the null hypothesis with a significance level of 0.05?
+Yes
 
 ### 9. What is the p-value for the test?
-
+```{r}
+summary(aov(Speed ~ factor(Expt), data = data))
+```
 ### 10. Now suppose that we wanted to determine which experiments have different means than others. One way to do this is to compare all possible pairs of means. What test would be used?
 
 ### 11. Perform this analysis.
@@ -61,3 +62,4 @@ Check
 ### 12. What are the conclusions?
 
 ### 13. How do multiple testing issues affect the conclusions that can be drawn from this analysis?
+The overall type 1 error will increase if we set significance level of 0.05 for each combination of comparisons.
