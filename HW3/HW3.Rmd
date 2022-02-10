@@ -27,23 +27,72 @@ Each participant completed an IQ test in 1973. (A subset of the IQ scores from t
 - _GROUP:_ As described above (1, 2, or 3)
 - _IQ:_ IQ score
 
-#### 1. The first goal is to compare the mean IQ scores for males and females. Use a 2-sample t-test for this comparison. What is the p-value?
+```{r, message=FALSE}
+# Loading dataset
+library(dplyr)
+data <- read.csv('lead_study.csv')
+str(data)
+summary(data)
+```
 
+#### 1. The first goal is to compare the mean IQ scores for males and females. Use a 2-sample t-test for this comparison. What is the p-value?
+```{r}
+males <- filter(data, SEX == 1)
+females <- filter(data, SEX == 2)
+
+t.test(x = males$IQ, y = females$IQ, paired = FALSE, var.equal = TRUE)$p.value
+```
 #### 2. State the conclusion from your test.
+We fail to reject the null hypothesis.
 
 #### 3. Are the independence assumptions valid for the t-test in this situation? Give a brief explanation.
 
 #### 4. The second goal is to compare the mean IQ scores in the 3 groups. State in words the null hypothesis for this test.
+The mean IQ scores of the 3 groups are equal.
+$$ H_0: \mu_1 = \mu_2 = \mu_3$$
 
 #### 5. State in words the alternative hypothesis for this test.
+The mean IQ scores of the 3 groups are unequal.
+$$ H_0: \mu_1 \neq \mu_2 \neq \mu_3$$
 
 #### 6. What method should be used to perform the test?
+We should use ANOVA.
 
 #### 7. Perform the test. Report the p-value.
+```{r}
+summary(aov(IQ ~ factor(GROUP), data = data))
+```
 
 #### 8. State your conclusion about the evidence for an association between lead exposure and IQ.
+There is a relationship between lead exposure and IQ. We reject the null hypothesis.
 
 #### 9. Are there strong reasons to believe that the assumptions of this test are not met? Briefly justify your answer.
+```{r}
+#Evaluating assumptions of test
+
+#Checking for equal variance and sample size
+data.stats <- data %>% group_by(GROUP) %>% summarise(sample.size = n(), mean = mean(IQ), variance = var(IQ))
+data.stats
+
+#Checking for normality
+library(ggplot2)
+
+#plot IQ histogram for each group
+hist <- ggplot(data, aes(IQ)) + 
+  geom_histogram(binwidth = 10) +
+  facet_grid(.~GROUP) +
+  geom_vline(data = data.stats, aes(xintercept = mean), color = 'blue', linetype = 2) +
+  ggtitle("Histogram for IQ split by GROUP variable")
+hist
+```
+The 3 assumptions for ANOVA and an assessment of whether they are being met:
+
+- Independence $\checkmark{}$
+  - Each child's observation is independent of others
+- Equal variance $X$
+  - As we can see in the above table, variances of the 3 groups are not very close
+- Large sample size or normal distribution of population $\checkmark{}$
+  - There are at least 30 samples in each group
 
 #### 10. Conduct all pairwise comparison of group means. Report the p-values.
 
