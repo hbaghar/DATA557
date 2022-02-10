@@ -3,9 +3,9 @@ title: "DATA 557: HW Assignment 3"
 author: "Hriday Baghar"
 date: "February 11, 2022"
 output:
-  html_notebook: default
   pdf_document:
     latex_engine: xelatex
+  html_notebook: default
 mainfont: Helvetica
 monofont: Monaco
 ---
@@ -46,6 +46,7 @@ t.test(x = males$IQ, y = females$IQ, paired = FALSE, var.equal = TRUE)$p.value
 We fail to reject the null hypothesis.
 
 #### 3. Are the independence assumptions valid for the t-test in this situation? Give a brief explanation.
+The independence assumptions are valid because each sample from the male and female group should be independent from each other.
 
 #### 4. The second goal is to compare the mean IQ scores in the 3 groups. State in words the null hypothesis for this test.
 The mean IQ scores of the 3 groups are equal.
@@ -90,20 +91,57 @@ The 3 assumptions for ANOVA and an assessment of whether they are being met:
 - Independence $\checkmark{}$
   - Each child's observation is independent of others
 - Equal variance $X$
-  - As we can see in the above table, variances of the 3 groups are not very close
+  - As we can see in the above table, variances of the 3 groups are not very close. This assumption is getting violated.
 - Large sample size or normal distribution of population $\checkmark{}$
-  - There are at least 30 samples in each group
+  - There are at least 30 samples in each group population distribution of IQ tends to follow a normal distribution
 
 #### 10. Conduct all pairwise comparison of group means. Report the p-values.
+```{r}
+pairwise.fn <- function(data) {
+combs <- combn(unique(data$GROUP), 2)
+pairwise.df <- data.frame(group.1 = combs[1,], 
+                          group.2 = combs[2,], 
+                          p.value = rep(NA, length(combs[1,])))
+
+for(row in 1:length(pairwise.df)){
+  x <- data %>% filter(GROUP == pairwise.df[row,1]) %>% select(IQ)
+  y <- data %>% filter(GROUP == pairwise.df[row,2]) %>% select(IQ)
+  pairwise.df[row, "p.value"] <- t.test(x, y, paired = FALSE, var.equal = TRUE)$p.value
+}
+return(pairwise.df)
+}
+
+pairwise.fn(data)
+```
 
 #### 11. What conclusion about the association between lead and IQ would you draw from the pairwise comparisons of group means? Does it agree with the conclusion in Q8? (Consider the issue of multiple testing in your answer.)
+We must apply a Bonferroni correction for the 3 tests that we conduct. The new significance level is $\alpha_{corrected} = 0.05/3 = 0.01667$.
 
+Based on this, we fail to reject the null hypothesis of all 3 tests. This in contradiction with our conclusions from Q8.
 #### 12. Now we wish to compare the 3 group means for males and females separately. Display some appropriate descriptive statistics for this analysis.
+```{r}
+data %>% mutate(SEX = if_else(SEX==1, "Male", "Female")) %>%  
+  group_by(SEX, GROUP) %>% 
+  summarise(sample.size = n(), mean = mean(IQ), var = var(IQ))
+```
 
 #### 13. Perform tests to compare the mean IQ scores in the 3 groups for males and females separately. Report the p-values from the two tests.
+```{r}
+#males
+summary(aov(IQ ~ factor(GROUP), data = males))
 
+#females
+summary(aov(IQ ~ factor(GROUP), data = females))
+```
 #### 14. What can you conclude about the association between lead and IQ from these tests? Does it agree with the result in Q8 and Q11? (Consider multiple testing.)
 
 #### 15. Now perform all 3 pairwise comparisons of groups for males and females separately. Report the p-values from these tests?
+```{r}
+#males
+pairwise.fn(males)
+
+#females
+pairwise.fn(females)
+```
 
 #### 16. What do you conclude about the association between lead and IQ from the results in Q13? Does your conclusion change from previous conclusions made in Q8, Q11 and Q14?
