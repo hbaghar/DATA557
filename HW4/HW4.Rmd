@@ -1,0 +1,140 @@
+---
+title: "DATA 557: HW Assignment 4"
+author: "Hriday Baghar"
+date: "February 17, 2022"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_notebook: default
+mainfont: Helvetica
+monofont: Monaco
+---
+
+**Data: ‘Sales.csv’**
+
+The data consist of sales prices for a sample of homes from a US city and some features of the houses.
+
+Variables:
+
+- _LAST_SALE_PRICE_: the sale price of the home
+- _SQFT_: area of the house (sq. ft.)
+- _LOT_SIZE_: area of the lot (sq. ft.)
+- _BEDS_: number of bedrooms
+- _BATHS_: number of bathrooms
+
+```{r}
+sales <- read.csv("Sales.csv")
+str(sales)
+summary(sales)
+```
+We see that variables have missing values. For the scope of this assignment, we will remove all records with any missing values.
+
+```{r}
+sales <- na.omit(sales)
+str(sales)
+summary(sales)
+```
+
+
+#### 1. Calculate all pairwise correlations between all five variables. 
+```{r}
+combs <- combn(names(sales), 2)
+corr.df <- data.frame(variable1 = combs[1,], varaible2 = combs[2,], corr = rep(NA, length(combs[1,])), 
+                      stringsAsFactors = FALSE)
+
+for(row in 1:nrow(corr.df)){
+  x <- sales[,corr.df[row,1]]
+  y <- sales[,corr.df[row,2]]
+  corr.df[row,"corr"] <- cov(x,y)/(sd(x)*sd(y))
+}
+corr.df
+```
+
+```{r}
+#Sanity check
+cor(sales)
+```
+
+#### 2. Make a  scatterplot of the sale price versus the area of the house. Describe the association between these two variables.
+```{r}
+library(ggplot2)
+
+scatter <- ggplot(data = sales, aes(y = LAST_SALE_PRICE, x = SQFT)) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  geom_point(alpha = 0.2, color = "blue") +
+  geom_smooth(method = "lm", color = "red", size = 0.5)
+scatter
+```
+There is a positive correlation between sale price and area. Most houses are priced under $2,000,000 and have area under 3750 sq. ft.
+
+#### 3. Fit a simple linear regression model (Model 1) with sale price as response variable and area of the house (SQFT) as predictor variable. State the estimated value of the intercept and the estimated coefficient for the area variable.
+```{r}
+model1 <- lm(LAST_SALE_PRICE ~ SQFT, data = sales)
+summary(model1)
+```
+
+#### 4. Write the equation that describes the relationship between the mean sale price and SQFT. 
+$$
+\hat{Price} = -47,566.52 + 350.91\times Area
+$$
+
+#### 5. State the interpretation in words of the estimated intercept.
+For an area of 0 sq. ft. the estimated mean sale price is -$47,566. This is due to extrapolation of data beyond the actual range.
+
+#### 6. State the interpretation in words of the estimated coefficient for the area variable.
+For every unit increase in area, the sale price increases by $350.91.
+
+#### 7. Add the LOT_SIZE variable to the linear regression model (Model 2). How did the estimated coefficient for the SQFT variable change?
+```{r}
+model2 <- lm(LAST_SALE_PRICE ~ SQFT + LOT_SIZE, data = sales)
+summary(model2)
+```
+The estimated coefficient for SQFT increased a little bit.
+
+#### 8. State the interpretation of the coefficient of SQFT in Model 2.
+The average difference in sale price for houses at a given lot size is $355.7 per unit increase in area.
+
+#### 9. Report the R-squared values from the two models. Explain why they are different.
+For the model with only area as a predictor variable $R^2 = 0.5489$.
+For the model with area and lot size as predictor variables $R^2 = 0.5507$
+
+The $R^2$ value is a measure of how much variation in the response is explained by the model. A higher $R^2$ for model 2 corresponds to higher variation explained by the model on adding the lot size variable, i.e. a better fit.
+
+#### 10. Report the estimates of the error variances from the two models. Explain why they are different.
+```{r}
+(err.var.1 <- sum((model1$residuals)^2)/(nrow(sales)-length(model1$coefficients)))
+(err.var.2 <- sum((model2$residuals)^2)/(nrow(sales)-length(model2$coefficients)))
+
+err.var.1 < err.var.2
+```
+
+```{r}
+#Sanity check
+
+#Refer to Sum Sq value for residuals
+anova(model1)
+anova(model2)
+```
+
+
+#### 11. State the interpretation of the estimated error variance for Model 2.
+Error variance is lower in model 2 than 1 which reduces the standard error for $\hat{\beta}$. Model 2 would be a better fit than model 1 based on this.
+
+#### 12. Test the null hypothesis that the coefficient of the SQFT variable in Model 2 is equal to 0. (Assume that the assumptions required for the test are met.)
+```{r}
+summary(model2)
+```
+From the above summary, we see that the test statistic for SQFT is 69.397 and the $p-value\ is < 2\times10^{-16}$. In conclusion we reject the null hypothesis that the coefficient of SQFT is 0. There is an evidence of linear association between area and sale price.
+
+#### 13. Test the null hypothesis that the coefficients of both the SQFT and LOT_SIZE variables are equal to 0. Report the test statistic.
+```{r}
+reduced.model <- lm(LAST_SALE_PRICE ~ 1, data = sales)
+anova(model2, reduced.model)
+```
+$F-statistic = 2489.1$ this is same as the F-statistic in model 2's summary function. We reject the null hypothesis that the coefficient for area and lot size is 0.
+
+#### 14. What is the distribution of the test statistic under the null hypothesis (assuming model assumptions are met)?
+The test statistic follows an F-distribution with 4062 degrees of freedom under the null hypothesis.
+
+#### 15. Report the p-value for the test in Q13.
+The p-value for this test is $2.2\times 10^{-16}$
