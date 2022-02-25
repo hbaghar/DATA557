@@ -1,0 +1,137 @@
+---
+title: "DATA 557: HW Assignment 5"
+author: "Hriday Baghar"
+date: "February 24, 2022"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_notebook: default
+mainfont: Helvetica
+monofont: Monaco
+---
+
+## Data: “Sales_sample.csv”
+
+## The  data are a random sample of size 1000 from the “Sales” data (after removing observations with missing values).
+
+```{r}
+data <- read.csv("Sales_sample.csv")
+str(data)
+summary(data)
+```
+
+
+#### 1.1. Fit a linear regression model (Model 1) with sale price as response variable and SQFT, LOT_SIZE, BEDS, and BATHS as predictor variables. Add the fitted values and the residuals from the models as new variables in your data set. Show the R code you used for this question.
+```{r}
+model.1 <- lm(LAST_SALE_PRICE ~ .,  data = data)
+summary(model.1)
+```
+
+#### 1.2. Create a histogram of the residuals. Based on this graph does the normality assumption hold?
+```{r}
+library(ggplot2)
+#Using fortify will append the residuals and fitted values to a dataframe with original values
+model.1.df <- fortify(model.1)
+str(model.1.df)
+
+(hist.resid <- ggplot(data = model.1.df) +
+  geom_histogram(aes(x = .resid), bins=100, color = "white") +
+  ggtitle("Histogram Plot for Model Residuals") +
+  labs(x = "Residuals")
+  )
+```
+The  distribution of the residuals is somewhat normal although it is slightly right skewed, possibly due to certain outliers.
+
+### Answer the following questions using residual plots for the model. You may make the plots using the residuals and fitted variables added to your data set or you may use the ‘plot’ function. You do not need to display the plots in your submission.
+
+#### 1.3. Assess the linearity assumption of the regression model. Explain by describing a pattern in one or more residual plots. 
+```{r}
+(scatter.resid <- ggplot(data = model.1.df, aes(y = .resid, x = .fitted)) +
+   geom_point(alpha = 0.3) +
+   geom_smooth(method = "auto", size = 0.5) +
+   ggtitle("Residuals vs Fitted Values Plot") +
+   labs(x = "Fitted Values", y = "Residuals")
+   )
+```
+The linearity assumption appears to be violated for larger fitted values as we can see from the plot. For the bulk of the dataset, there appears so be some minor relationship between fitted values and residuals.
+
+#### 1.4. Assess the constant variance assumption of the regression model. Explain by describing a pattern in one or more residual plots.
+```{r}
+(scatter.abs.resid <- ggplot(data = model.1.df, aes(x = .fitted, y = abs(.resid)))+
+   geom_point(alpha = 0.3) +
+   geom_smooth(method = "auto", size = 0.5) +
+   ggtitle("Absolute Values of Residuals vs Fitted Values Plot") +
+   labs(x = "Fitted Values", y = "|Residuals|"))
+```
+The smoothing curve should be approximately horizontal for the homoscedasticity assumption to hold. We see that is not the case, hence the constant variance assumption does not hold. We also see that the spread of the points is higher for larger fitted values, implying variance is not constant.
+
+#### 1.5. Assess the normality assumption of the linear regression model. Explain by describing a pattern in one or more residual plots.
+```{r}
+(qq.resid <- ggplot(data = model.1.df, aes(sample = .resid)) +
+  geom_qq(alpha = 0.3) +
+  geom_qq_line() +
+  ggtitle("Q-Q plot for Residuals"))
+```
+We see that the normality assumption is violated at both the tails of the distribution.
+
+#### 1.6. Give an overall assessment of how well the assumptions hold for the regression model.
+Overall, there appears to be a clear violation of the linearity, constant variance and normality assumption for the model.
+
+#### 1.7. Would statistical inferences based on this model be valid? Explain.
+Violation of constant variance and linearity assumptions makes statistical inferences based on this model unreliable. Since we have a large sample size we need not worry about the normality assumption.
+
+#### 1.8. Create a new variable (I will call it LOG_PRICE) which is calculated as the log-transformation of the sale price variable. Use base-10 logarithms. Fit a linear regression model (Model 2) with LOG_PRICE as response variable and SQFT, LOT_SIZE, BEDS, and BATHS as predictor variables. Report the table of coefficient estimates with standard errors and p-values.
+```{r}
+data$LOG_PRICE <- log10(data$LAST_SALE_PRICE)
+summary(data)
+
+model.2 <- lm(LOG_PRICE ~ . - LAST_SALE_PRICE, data = data)
+summary(model.2)
+```
+
+#### 1.9. Give an interpretation of the estimated coefficient of the variable SQFT in Model 2. 
+For a unit increase in sqft, holding all other variables at a constant value, the log10 of sale price increases by 1.006e-4 units. Additionally, we can interpret the coefficient in terms of percentage as follows:
+```{r}
+cat("Percentage change:", round((10^model.2$coefficients["SQFT"]-1)*100,3),"%")
+```
+For a unit increase in sqft (holding all other variables constant!), the percentage increase in sale price is 0.023%
+
+### Answer the following questions using residual plots for Model 2. You do not need to display the plots in your submission.
+
+#### 1.10. Assess the linearity assumption of Model 2. Explain by describing a pattern in one or more residual plots.
+```{r}
+model.2.df <- fortify(model.2)
+
+(scatter.resid.2 <- ggplot(data = model.2.df, aes(y = .resid, x = .fitted)) +
+   geom_point(alpha = 0.3) +
+   geom_smooth(method = "auto", size = 0.5) +
+   ggtitle("Residuals vs Fitted Values Plot") +
+   labs(x = "Fitted Values", y = "Residuals")
+   )
+```
+The linearity assumption appears to hold for this model. There is a very minor relationship between fitted values and residuals for outliers, as observed by the smoothing curve.
+
+#### 1.11. Assess the constant variance assumption of Model 2. Explain by describing a pattern in one or more residual plots.
+```{r}
+(scatter.abs.resid.2 <- ggplot(data = model.2.df, aes(x = .fitted, y = abs(.resid)))+
+   geom_point(alpha = 0.3) +
+   geom_smooth(method = "auto", size = 0.5) +
+   ggtitle("Absolute Values of Residuals vs Fitted Values Plot") +
+   labs(x = "Fitted Values", y = "|Residuals|"))
+```
+The smoothing curve is nearly horizontal for the model, hence the constant variance assumption appears to hold.
+
+#### 1.12. Assess the normality assumption of Model 2. Explain by describing a pattern in one or more residual plots.
+```{r}
+(qq.resid.2 <- ggplot(data = model.2.df, aes(sample = .resid)) +
+  geom_qq(alpha = 0.3) +
+  geom_qq_line() +
+  ggtitle("Q-Q plot for Residuals"))
+```
+The normality assumption is violated for this model at both the tails, although the number of points deviating considerably from the theoretical values appears to be lesser than model 1.
+
+#### 1.13. Give an overall assessment of how well the assumptions hold for Model 2.
+Linearity and constant variance assumptions hold based on the observed plots. The normality assumption does not hold, but we have a large sample size so we need not worry about this.
+
+#### 1.14. Would statistical inferences based on Model 2 be valid? Explain.
+The major assumptions of independence, linearity and constant variance are met. If we have a sufficiently large sample size, statistical inferences based on model 2 should be valid.
