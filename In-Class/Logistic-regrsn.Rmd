@@ -1,0 +1,55 @@
+---
+title: "In Class Activity - Regression"
+date: "16th Feb, 2022"
+output: html_notebook
+---
+
+# Question 1.
+
+Data: ‘field_goals_sample.csv’ (same data as used for in-class exercise for Feb 16). The data are from a random sample of 100 field goal attempts in National Football League games from 2008.
+
+The variables to be used for this exercise are:
+
+- _qtr_: quarter of the game (note qtr 5 represents over-time) 
+- _distance_: distance from ball placement to goal posts (yards)
+- _GOOD_: indicator of whether the attempt was successful
+
+```{r}
+fg.data <- read.csv("field_goals_sample.csv")
+```
+
+
+## 1.1. Fit a logistic regression model to the data with outcome variable GOOD and the variable qtr as a factor variable.
+```{r}
+summary(glm(GOOD ~ factor(qtr), data = fg.data, family = binomial))
+```
+
+
+## 1.2. One of the coefficient estimates is extremely large.  Explain what is going on.
+Qtr 5 has a very small sample size as we can see from the estimate and std error. Lets take a deeper look:
+```{r}
+fg.data[fg.data$qtr == 5, ]
+```
+We also see that all the field goals are marked GOOD. Hence the OR is $e^{14.77}$
+
+## 1.3. Exclude the observations for qtr 5 and re-fit the model. How did the results change?
+```{r}
+summary(glm(GOOD ~ factor(qtr), family = binomial, data = fg.data[fg.data$qtr < 5,]))
+```
+
+## 1.4. Add the indicator of distance equaling 40 yards or less to the model. First fit it with all observations. Compare to 1.2.
+```{r}
+summary(glm(GOOD ~ factor(qtr) + I(distance<=40), data = fg.data, family = binomial))
+```
+
+
+## 1.5. Now fit the model in 1.4 with qtr 5 excluded. Compare to 1.3.
+```{r}
+summary(glm(GOOD ~ factor(qtr) + I(distance<=40), data = fg.data[fg.data$qtr < 5,], family = binomial))
+```
+
+## 1.6. Add the interaction between the distance indicator and the qtr variable. First fit the model with all observations. Then fit the model with qtr 5 excluded. Explain what is going on in these models.
+```{r}
+summary(glm(GOOD ~ factor(qtr) * I(distance<=40), data = fg.data[fg.data$qtr < 5,], family = binomial))
+```
+
