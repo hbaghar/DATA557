@@ -1,0 +1,53 @@
+---
+title: "DATA 557: HW Assignment 6"
+author: "Hriday Baghar"
+date: "March 3, 2022"
+output:
+  html_notebook: default
+  pdf_document:
+    latex_engine: xelatex
+mainfont: Helvetica
+monofont: Monaco
+---
+
+**Data: “Sales_sample.csv” (same one as used in HW 5).**
+
+#### 1. Fit the linear regression model with sale price as response variable and SQFT, LOT_SIZE, BEDS, and BATHS as predictor variables (Model 1 from HW 5). Calculate robust standard errors for the coefficient estimates. Display a table with estimated coefficients, the usual standard errors that assume constant variance, and robust standard errors. 
+
+#### 2. Which set of standard errors should be used? Explain by referring to HW 5.
+
+#### 3. Perform the Wald test for testing that the coefficient of the LOT_SIZE variable is equal to 0. Usethe usual standard errors that assume constant variance. Report the test statistic and p-value.
+
+#### 4. Perform the robust Wald test statistic for testing that the coefficient of the LOT_SIZE variable is equal to 0. Report the test statistic and p-value.
+
+#### 5. Use the jackknife to estimate the SE for the coefficient of the LOT_SIZE variable. Report the jackknife estimate of the SE.
+
+#### 6. Use the jackknife estimate of the SE to test the null hypothesis that the coefficient of the LOT_SIZE variable is equal to 0. Report the test statistic and p-value.
+
+#### 7. Do the tests in Q3, Q4, and Q6 agree? Which of these tests are valid?
+
+#### 8. Remove the LOT_SIZE variable from Model 1 (call this Model 1A). Fit Model 1A and report the table of coefficients, the usual standard errors that assume constant variance, and robust standard errors.
+
+#### 9. Add the square of the LOT_SIZE variable to Model 1 (call this Model 1B). Fit Model 1B and report the table of coefficients, the usual standard errors that assume constant variance, and robust standard errors.
+
+#### 10. Perform the F test to compare Model 1A and Model 1B. Report the p-value.
+
+#### 11. State the null hypothesis being tested in Q10 either in words or by using model formulas.
+
+#### 12. Perform the robust Wald test to compare Model 1A and Model 1B. Report the p-value.
+
+#### 13. Compare the results of the tests in Q10 and Q12. Which test is valid?
+
+
+### The following questions use the LOG_PRICE variable as in HW 5. Fit models corresponding to Model 1A and Model 1B with LOG_PRICE as the response variable. Call these models Model 1A_Log and Model 1B_Log.
+
+
+#### 14. Perform the F test to compare Model 1A_Log and Model 1B_Log. Report the p-value.
+
+#### 15. State the null hypothesis being tested in Q14 either in words or by using model formulas.
+
+#### 16. Perform the robust Wald test to compare Model 1A_Log and Model 1B_Log. Report the p-value.
+
+#### 17. Compare the results of the tests in Q14 and Q16. Do they give the same conclusion?
+
+#### 18. Based on all of the analyses performed, answer the following question. Is there evidence for an association between the size of the lot and sales price? Explain.
