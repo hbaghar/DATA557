@@ -3,51 +3,153 @@ title: "DATA 557: HW Assignment 6"
 author: "Hriday Baghar"
 date: "March 3, 2022"
 output:
-  html_notebook: default
   pdf_document:
     latex_engine: xelatex
+  html_notebook: default
 mainfont: Helvetica
 monofont: Monaco
 ---
 
 **Data: “Sales_sample.csv” (same one as used in HW 5).**
 
+```{r}
+data <- read.csv("../HW5/Sales_sample.csv")
+str(data)
+summary(data)
+```
+
+
 #### 1. Fit the linear regression model with sale price as response variable and SQFT, LOT_SIZE, BEDS, and BATHS as predictor variables (Model 1 from HW 5). Calculate robust standard errors for the coefficient estimates. Display a table with estimated coefficients, the usual standard errors that assume constant variance, and robust standard errors. 
+```{r}
+#Creating model same as in HW5
+model.1 <- lm(LAST_SALE_PRICE ~ .,  data = data)
+summary(model.1)
+```
+```{r}
+#Calculating Robust SEs
+library(sandwich)
+
+robust.se <- sqrt(diag(sandwich::vcovHC(model.1)))
+(ests.table <- data.frame(cbind(summary(model.1)$coefficients[,c("Estimate","Std. Error")], robust.se)))
+```
 
 #### 2. Which set of standard errors should be used? Explain by referring to HW 5.
+Since the constant variance assumption is violated in Model 1 we should use the robust standard errors.
 
-#### 3. Perform the Wald test for testing that the coefficient of the LOT_SIZE variable is equal to 0. Usethe usual standard errors that assume constant variance. Report the test statistic and p-value.
+#### 3. Perform the Wald test for testing that the coefficient of the LOT_SIZE variable is equal to 0. Use the usual standard errors that assume constant variance. Report the test statistic and p-value.
+```{r}
+reduced.model <- lm(LAST_SALE_PRICE ~ . -LOT_SIZE, data = data)
+anova(model.1, reduced.model)
+```
+From the above table we can see that the F-test statistic for LOT_SIZE = 13.573 and the p-value = 0.000242. Based on this we reject the null hypothesis that there is no linear relation between lot size and sale price.
+
+Note: This test is equivalent to conducting a t-test (with n-p d.o.f) on estimate/SE for the parameter LOT_SIZE in model 1, as we can see from the p-value
 
 #### 4. Perform the robust Wald test statistic for testing that the coefficient of the LOT_SIZE variable is equal to 0. Report the test statistic and p-value.
+```{r}
+library(lmtest)
+
+waldtest(model.1, reduced.model, test = "Chisq", vcov = vcovHC)
+```
+```{r}
+#Checking if t-test gives same p-value
+
+2 * (1 - pt(ests.table["LOT_SIZE", "Estimate"]/ ests.table["LOT_SIZE", "robust.se"], df = nrow(data) - nrow(ests.table)))
+# Q: Close enough but not exact?
+# A: This is because we pass Chisq and not F to waldtest()
+```
+
+Test statistic = 0.783 \
+P-value = 0.3762
+
+We fail to reject the null hypothesis based on the Robust Wald Test.
 
 #### 5. Use the jackknife to estimate the SE for the coefficient of the LOT_SIZE variable. Report the jackknife estimate of the SE.
+```{r}
+n <- nrow(data)
+fit.jack.model <- function(i){
+  lmi <- lm(LAST_SALE_PRICE ~ ., data = data, subset = -i)
+  return(lmi$coef[4])
+}
+beta.jack <- sapply(1:n, fit.jack.model)
+
+(se.jack <- (n - 1)*sd(beta.jack)/sqrt(n))
+```
 
 #### 6. Use the jackknife estimate of the SE to test the null hypothesis that the coefficient of the LOT_SIZE variable is equal to 0. Report the test statistic and p-value.
+```{r}
+#Which estimate should be used in numerator?
+2 * (1 - pt(mean(beta.jack)/se.jack, df = nrow(data) - nrow(ests.table)))
+```
 
 #### 7. Do the tests in Q3, Q4, and Q6 agree? Which of these tests are valid?
+The tests in Q4 and Q6 agree and are the valid tests out of the three tests performed. This is because the constant variance assumption is violated in Model 1.
 
 #### 8. Remove the LOT_SIZE variable from Model 1 (call this Model 1A). Fit Model 1A and report the table of coefficients, the usual standard errors that assume constant variance, and robust standard errors.
+```{r}
+model.1a <- reduced.model
+summary(model.1a)
+
+robust.se.1a <- sqrt(diag(sandwich::vcovHC(model.1a)))
+(ests.table.1a <- data.frame(cbind(summary(model.1a)$coefficients[,c("Estimate","Std. Error")], robust.se.1a)))
+```
 
 #### 9. Add the square of the LOT_SIZE variable to Model 1 (call this Model 1B). Fit Model 1B and report the table of coefficients, the usual standard errors that assume constant variance, and robust standard errors.
+```{r}
+model.1b <- lm(LAST_SALE_PRICE ~ . + I(LOT_SIZE^2), data = data)
+summary(model.1b)
+
+robust.se.1b <- sqrt(diag(sandwich::vcovHC(model.1b)))
+(ests.table.1b <- data.frame(cbind(summary(model.1b)$coefficients[,c("Estimate","Std. Error")], robust.se.1b)))
+```
 
 #### 10. Perform the F test to compare Model 1A and Model 1B. Report the p-value.
+```{r}
+anova(model.1a, model.1b)
+```
 
 #### 11. State the null hypothesis being tested in Q10 either in words or by using model formulas.
+$$
+H_0: \hat{\beta_{LOT\_SIZE}} = \hat{\beta_{LOT\_SIZE^2}} = 0
+$$
 
 #### 12. Perform the robust Wald test to compare Model 1A and Model 1B. Report the p-value.
+```{r}
+waldtest(model.1b, model.1a, test = "Chisq", vcov = vcovHC)
+```
 
 #### 13. Compare the results of the tests in Q10 and Q12. Which test is valid?
-
+In Q10 we reject the null hypothesis and in Q12 we fail to reject the null hypothesis. The test in Q12 should be valid because as discussed above the constant variance assumption is violated in both the models (as established in HW5).
 
 ### The following questions use the LOG_PRICE variable as in HW 5. Fit models corresponding to Model 1A and Model 1B with LOG_PRICE as the response variable. Call these models Model 1A_Log and Model 1B_Log.
+```{r}
+model.1a.log <- lm(log10(LAST_SALE_PRICE) ~ . - LOT_SIZE, data = data)
+model.1b.log <- lm(log10(LAST_SALE_PRICE) ~ . + I(LOT_SIZE^2), data = data)
 
+summary(model.1a.log)
+summary(model.1b.log)
+```
 
 #### 14. Perform the F test to compare Model 1A_Log and Model 1B_Log. Report the p-value.
+```{r}
+anova(model.1b.log, model.1a.log)
+```
 
 #### 15. State the null hypothesis being tested in Q14 either in words or by using model formulas.
+$$
+H_0: \hat{\beta_{LOT\_SIZE}} = \hat{\beta_{LOT\_SIZE^2}} = 0
+$$
 
 #### 16. Perform the robust Wald test to compare Model 1A_Log and Model 1B_Log. Report the p-value.
-
+```{r}
+waldtest(model.1a.log, model.1b.log, test = "Chisq", vcov = vcovHC)
+```
 #### 17. Compare the results of the tests in Q14 and Q16. Do they give the same conclusion?
+The results in Q14 and Q16 arrive at the same conclusion. We reject the null hypothesis.
 
 #### 18. Based on all of the analyses performed, answer the following question. Is there evidence for an association between the size of the lot and sales price? Explain.
+Yes, there is evidence for association between lot size and sale price. More specifically, the association appears to exhibit some non-linear characteristics based on the results in Q14 and Q16 using LOT_SIZE^2. 
+
+We should draw statistical inference from the results of the log Model 1A and 1B over the regular Model 1A and 1B because even though we are able to account for the violation of the constant variance assumption through robust statistics in regular model 1A and 1B we still find that the linearity assumption is violated, which along with independence is the most important assumption in linear regression.
+
+We can rely on the results of non-robust Wald tests (Q14) in case of log Model 1A and 1B because all the assumptions of linear regression are being met, and there is no need to use robust statistics.
